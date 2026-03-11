@@ -50,6 +50,7 @@ async function main(): Promise<void> {
     if (line.trim() === "" || line.trim() === "END") break;
     lines.push(line);
   }
+  rl.close();
 
   const { baseCost, packages } = parseInput(lines);
 
