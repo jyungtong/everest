@@ -1,6 +1,15 @@
 {
   "name": "questions",
   "private": true,
+  "workspaces": [
+    "problem1",
+    "problem2"
+  ],
+  "scripts": {
+    "start:problem1": "npm start -w problem1",
+    "test:problem1": "npm test -w problem1",
+    "test": "npm test --workspaces"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsx": "^4.21.0",
