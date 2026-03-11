@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calculateDelivery } from "../src/calculator";
-import { OFFER_CODES } from "../src/offers";
+import { OFFER_CODES } from "../src/config";
 import { Package } from "../src/types";
 
 const BASE = 100;

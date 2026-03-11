@@ -1,7 +1,6 @@
 import * as readline from "readline";
-import { OFFER_CODES } from "./offers";
 import { calculateDelivery } from "./calculator";
-import config from "./config";
+import config, { OFFER_CODES } from "./config";
 import { Package } from "./types";
 
 function parseInput(lines: string[]): { baseCost: number; packages: Package[] } {
