@@ -20,9 +20,16 @@ export interface DeliveryResult {
 	id: string;
 	discount: number;
 	totalCost: number;
+	estimatedDeliveryTime?: number;
 }
 
 export interface CostConfig {
 	weightCostPerKg: number;
 	distanceCostPerKm: number;
+}
+
+export interface FleetConfig {
+	numVehicles: number;
+	maxSpeed: number; // km/h
+	maxWeight: number; // kg
 }

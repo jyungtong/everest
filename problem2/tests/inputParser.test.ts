@@ -156,3 +156,44 @@ describe("parseInput — invalid values", () => {
 		);
 	});
 });
+
+describe("parseInput — fleet config", () => {
+	it("parses fleet config when present", () => {
+		const lines = ["100 1", "PKG1 5 5 OFR001", "2 70 200"];
+		expect(parseInput(lines)).toEqual({
+			baseCost: 100,
+			packages: [{ id: "PKG1", weight: 5, distance: 5, offerCode: "OFR001" }],
+			fleetConfig: { numVehicles: 2, maxSpeed: 70, maxWeight: 200 },
+		});
+	});
+
+	it("returns no fleetConfig when fleet line is absent", () => {
+		const lines = ["100 1", "PKG1 5 5 OFR001"];
+		const result = parseInput(lines);
+		expect(result.fleetConfig).toBeUndefined();
+	});
+
+	it("throws on invalid fleet config line", () => {
+		expect(() => parseInput(["100 1", "PKG1 5 5", "abc 70 200"])).toThrow(
+			'Invalid fleet config line: "abc 70 200"',
+		);
+	});
+
+	it("throws when number of vehicles is zero", () => {
+		expect(() => parseInput(["100 1", "PKG1 5 5", "0 70 200"])).toThrow(
+			"Number of vehicles must be positive, got 0.",
+		);
+	});
+
+	it("throws when max speed is zero", () => {
+		expect(() => parseInput(["100 1", "PKG1 5 5", "2 0 200"])).toThrow(
+			"Max speed must be positive, got 0.",
+		);
+	});
+
+	it("throws when max weight is zero", () => {
+		expect(() => parseInput(["100 1", "PKG1 5 5", "2 70 0"])).toThrow(
+			"Max carriable weight must be positive, got 0.",
+		);
+	});
+});

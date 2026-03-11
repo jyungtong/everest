@@ -8,6 +8,8 @@
 	"scripts": {
 		"start:problem1": "npm start -w problem1",
 		"test:problem1": "npm test -w problem1",
+		"start:problem2": "npm start -w problem2",
+		"test:problem2": "npm test -w problem2",
 		"test": "npm test --workspaces",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",

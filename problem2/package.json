@@ -1,5 +1,5 @@
 {
-	"name": "courier-delivery-calculator-problem-1",
+	"name": "courier-delivery-calculator-problem-2",
 	"version": "1.0.0",
 	"description": "CLI tool to calculate courier delivery costs with discount offers",
 	"main": "src/index.ts",

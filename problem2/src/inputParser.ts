@@ -1,8 +1,9 @@
-import type { Package } from "./types";
+import type { FleetConfig, Package } from "./types";
 
 export function parseInput(lines: string[]): {
 	baseCost: number;
 	packages: Package[];
+	fleetConfig?: FleetConfig;
 } {
 	const nonEmpty = lines.map((l) => l.trim()).filter((l) => l.length > 0);
 
@@ -51,5 +52,34 @@ export function parseInput(lines: string[]): {
 		packages.push({ id, weight, distance, offerCode });
 	}
 
-	return { baseCost, packages };
+	const fleetLine = nonEmpty[numPackages + 1];
+	if (!fleetLine) {
+		return { baseCost, packages };
+	}
+
+	const [rawVehicles, rawSpeed, rawMaxWeight] = fleetLine.split(/\s+/);
+	const numVehicles = parseInt(rawVehicles, 10);
+	const maxSpeed = parseFloat(rawSpeed);
+	const maxWeight = parseFloat(rawMaxWeight);
+
+	if (
+		Number.isNaN(numVehicles) ||
+		Number.isNaN(maxSpeed) ||
+		Number.isNaN(maxWeight)
+	) {
+		throw new Error(`Invalid fleet config line: "${fleetLine}"`);
+	}
+
+	if (numVehicles <= 0)
+		throw new Error(`Number of vehicles must be positive, got ${numVehicles}.`);
+	if (maxSpeed <= 0)
+		throw new Error(`Max speed must be positive, got ${maxSpeed}.`);
+	if (maxWeight <= 0)
+		throw new Error(`Max carriable weight must be positive, got ${maxWeight}.`);
+
+	return {
+		baseCost,
+		packages,
+		fleetConfig: { numVehicles, maxSpeed, maxWeight },
+	};
 }
