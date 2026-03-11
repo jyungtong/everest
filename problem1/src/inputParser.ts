@@ -18,6 +18,11 @@ export function parseInput(lines: string[]): {
 		throw new Error(`Invalid header line: "${nonEmpty[0]}"`);
 	}
 
+	if (baseCost < 0)
+		throw new Error(`Base cost must be non-negative, got ${baseCost}.`);
+	if (numPackages <= 0)
+		throw new Error(`Package count must be positive, got ${numPackages}.`);
+
 	const packages: Package[] = [];
 
 	for (let i = 1; i <= numPackages; i++) {
@@ -37,6 +42,11 @@ export function parseInput(lines: string[]): {
 		if (!id || Number.isNaN(weight) || Number.isNaN(distance)) {
 			throw new Error(`Invalid package line: "${line}"`);
 		}
+
+		if (weight <= 0)
+			throw new Error(`Package weight must be positive on line: "${line}"`);
+		if (distance <= 0)
+			throw new Error(`Package distance must be positive on line: "${line}"`);
 
 		packages.push({ id, weight, distance, offerCode });
 	}

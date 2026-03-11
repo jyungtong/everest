@@ -62,7 +62,7 @@ A discount is applied only when **both** weight and distance are within the offe
 - **Only the specified offer code is checked.** No best-match or fallback logic is applied — if the code doesn't match a known offer, no discount is given.
 - **Input is space-delimited.** Each line is split on whitespace; extra spaces are ignored. The offer code field is optional and defaults to no discount if omitted.
 - **`num_packages` in the input is informational.** The app processes all package lines provided; it does not validate that the count matches.
-- **Negative or zero weights/distances are not validated.** The formula will still compute a result; no domain-level guards are enforced.
+- **Weight and distance must be positive (> 0).** Zero or negative values are rejected at input parsing with an error. Base cost must be non-negative (≥ 0).
 
 ### Run
 
