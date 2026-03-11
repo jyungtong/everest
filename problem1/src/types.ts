@@ -21,3 +21,8 @@ export interface DeliveryResult {
   discount: number;
   totalCost: number;
 }
+
+export interface CostConfig {
+  weightCostPerKg: number;
+  distanceCostPerKm: number;
+}

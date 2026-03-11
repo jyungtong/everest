@@ -1,6 +1,7 @@
 import * as readline from "readline";
 import { OFFER_CODES } from "./offers";
 import { calculateDelivery } from "./calculator";
+import config from "./config";
 import { Package } from "./types";
 
 function parseInput(lines: string[]): { baseCost: number; packages: Package[] } {
@@ -55,7 +56,7 @@ async function main(): Promise<void> {
   const { baseCost, packages } = parseInput(lines);
 
   for (const pkg of packages) {
-    const result = calculateDelivery(baseCost, pkg, OFFER_CODES);
+    const result = calculateDelivery(baseCost, pkg, OFFER_CODES, config);
     console.log(`${result.id} ${result.discount} ${result.totalCost}`);
   }
 }

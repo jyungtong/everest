@@ -1,4 +1,4 @@
-import { DeliveryResult, OfferRule, Package, Range } from "./types";
+import { CostConfig, DeliveryResult, OfferRule, Package, Range } from "./types";
 
 /**
  * Returns true if `value` is within the inclusive range [min, max].
@@ -22,7 +22,7 @@ function isOfferApplicable(rule: OfferRule, pkg: Package): boolean {
  * Calculates the delivery cost and applicable discount for a single package.
  *
  * Formula:
- *   deliveryCost = baseCost + (weight × 10) + (distance × 5)
+ *   deliveryCost = baseCost + (weight × config.weightCostPerKg) + (distance × config.distanceCostPerKm)
  *   discount     = deliveryCost × rule.discount  (if offer applies)
  *   totalCost    = deliveryCost - discount
  *
@@ -31,9 +31,10 @@ function isOfferApplicable(rule: OfferRule, pkg: Package): boolean {
 export function calculateDelivery(
   baseCost: number,
   pkg: Package,
-  offers: Record<string, OfferRule>
+  offers: Record<string, OfferRule>,
+  config: CostConfig
 ): DeliveryResult {
-  const deliveryCost = baseCost + pkg.weight * 10 + pkg.distance * 5;
+  const deliveryCost = baseCost + (pkg.weight * config.weightCostPerKg) + (pkg.distance * config.distanceCostPerKm);
 
   const rule = offers[pkg.offerCode];
   const discountRate = rule && isOfferApplicable(rule, pkg) ? rule.discount : 0;

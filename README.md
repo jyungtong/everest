@@ -32,7 +32,18 @@ Outputs one line per package:
 <package_id> <discount> <total_cost>
 ```
 
-Delivery cost formula: `base_cost + (weight × 10) + (distance × 5)`
+Delivery cost formula: `base_cost + (weight × weightCostPerKg) + (distance × distanceCostPerKm)`
+
+### Configuration
+
+Cost rates are defined in `problem1/src/config.ts` and must be set before running:
+
+| Field               | Description                         |
+|---------------------|-------------------------------------|
+| `weightCostPerKg`   | Cost multiplier per kg of weight    |
+| `distanceCostPerKm` | Cost multiplier per km of distance  |
+
+Both values must be positive numbers. The app will throw an error at startup if either is invalid.
 
 ### Offer Codes
 
