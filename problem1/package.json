@@ -1,11 +1,11 @@
 {
-  "name": "courier-delivery-calculator-problem-1",
-  "version": "1.0.0",
-  "description": "CLI tool to calculate courier delivery costs with discount offers",
-  "main": "src/index.ts",
-  "scripts": {
-    "start": "tsx src/index.ts",
-    "build": "tsc",
-    "test": "vitest run"
-  }
+	"name": "courier-delivery-calculator-problem-1",
+	"version": "1.0.0",
+	"description": "CLI tool to calculate courier delivery costs with discount offers",
+	"main": "src/index.ts",
+	"scripts": {
+		"start": "tsx src/index.ts",
+		"build": "tsc",
+		"test": "vitest run"
+	}
 }

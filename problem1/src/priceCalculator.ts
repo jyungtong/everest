@@ -1,13 +1,19 @@
-import { CostConfig, DeliveryResult, OfferRule, Package, Range } from "./types";
+import type {
+	CostConfig,
+	DeliveryResult,
+	OfferRule,
+	Package,
+	Range,
+} from "./types";
 
 /**
  * Returns true if `value` is within the inclusive range [min, max].
  * Omitting min means no lower bound; omitting max means no upper bound.
  */
 function inRange(value: number, range: Range): boolean {
-  if (range.min !== undefined && value < range.min) return false;
-  if (range.max !== undefined && value > range.max) return false;
-  return true;
+	if (range.min !== undefined && value < range.min) return false;
+	if (range.max !== undefined && value > range.max) return false;
+	return true;
 }
 
 /**
@@ -15,7 +21,9 @@ function inRange(value: number, range: Range): boolean {
  * Both distance AND weight criteria must be satisfied.
  */
 function isOfferApplicable(rule: OfferRule, pkg: Package): boolean {
-  return inRange(pkg.distance, rule.distance) && inRange(pkg.weight, rule.weight);
+	return (
+		inRange(pkg.distance, rule.distance) && inRange(pkg.weight, rule.weight)
+	);
 }
 
 /**
@@ -29,18 +37,21 @@ function isOfferApplicable(rule: OfferRule, pkg: Package): boolean {
  * Discount and total cost are rounded to the nearest integer.
  */
 export function calculateDeliveryCost(
-  baseCost: number,
-  pkg: Package,
-  offers: Record<string, OfferRule>,
-  config: CostConfig
+	baseCost: number,
+	pkg: Package,
+	offers: Record<string, OfferRule>,
+	config: CostConfig,
 ): DeliveryResult {
-  const deliveryCost = baseCost + (pkg.weight * config.weightCostPerKg) + (pkg.distance * config.distanceCostPerKm);
+	const deliveryCost =
+		baseCost +
+		pkg.weight * config.weightCostPerKg +
+		pkg.distance * config.distanceCostPerKm;
 
-  const rule = offers[pkg.offerCode];
-  const discountRate = rule && isOfferApplicable(rule, pkg) ? rule.discount : 0;
+	const rule = offers[pkg.offerCode];
+	const discountRate = rule && isOfferApplicable(rule, pkg) ? rule.discount : 0;
 
-  const discount = Math.round(deliveryCost * discountRate);
-  const totalCost = Math.round(deliveryCost - discount);
+	const discount = Math.round(deliveryCost * discountRate);
+	const totalCost = Math.round(deliveryCost - discount);
 
-  return { id: pkg.id, discount, totalCost };
+	return { id: pkg.id, discount, totalCost };
 }
