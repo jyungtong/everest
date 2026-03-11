@@ -53,6 +53,17 @@ PKG2 15 5 OFR002
 PKG3 10 100 OFR003" | npm run start:problem1
 ```
 
+Or interactively — type your input and press **Enter on a blank line** or type **`END`** to trigger calculation:
+
+```bash
+npm run start:problem1
+100 3
+PKG1 5 5 OFR001
+PKG2 15 5 OFR002
+PKG3 10 100 OFR003
+END
+```
+
 Expected output:
 
 ```

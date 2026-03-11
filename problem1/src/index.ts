@@ -47,6 +47,7 @@ async function main(): Promise<void> {
   const lines: string[] = [];
 
   for await (const line of rl) {
+    if (line.trim() === "" || line.trim() === "END") break;
     lines.push(line);
   }
 
