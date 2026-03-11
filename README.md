@@ -55,6 +55,15 @@ Both values must be positive numbers. The app will throw an error at startup if 
 
 A discount is applied only when **both** weight and distance are within the offer's eligibility range.
 
+### Assumptions
+
+- **Offer ranges are inclusive on both ends.** A package with weight=70 qualifies for OFR001 (min=70 is inclusive). The one exception is OFR001's distance, which the spec states as `< 200` (strict), so it is stored as `max: 199`.
+- **Discount is rounded to the nearest integer** using `Math.round`. Half-values (e.g. 22.5) round up. The total cost is derived from the rounded discount, not rounded independently.
+- **Only the specified offer code is checked.** No best-match or fallback logic is applied — if the code doesn't match a known offer, no discount is given.
+- **Input is space-delimited.** Each line is split on whitespace; extra spaces are ignored. The offer code field is optional and defaults to no discount if omitted.
+- **`num_packages` in the input is informational.** The app processes all package lines provided; it does not validate that the count matches.
+- **Negative or zero weights/distances are not validated.** The formula will still compute a result; no domain-level guards are enforced.
+
 ### Run
 
 ```bash
