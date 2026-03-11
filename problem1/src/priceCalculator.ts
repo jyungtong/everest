@@ -28,7 +28,7 @@ function isOfferApplicable(rule: OfferRule, pkg: Package): boolean {
  *
  * Discount and total cost are rounded to the nearest integer.
  */
-export function calculateDelivery(
+export function calculateDeliveryCost(
   baseCost: number,
   pkg: Package,
   offers: Record<string, OfferRule>,
