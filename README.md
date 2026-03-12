@@ -104,6 +104,100 @@ npm test
 
 ---
 
-## Problem 2
+## Problem 2 — Courier Delivery Calculator with Time Estimation
 
-Coming soon.
+Extends Problem 1 to also estimate the delivery time for each package by optimally loading a fleet of vehicles.
+
+### How it works
+
+Reads from **stdin**:
+
+```
+<base_cost> <num_packages>
+<package_id> <weight_kg> <distance_km> [offer_code]
+...
+<num_vehicles> <max_speed_kmh> <max_carriable_weight_kg>
+```
+
+Outputs one line per package (in original input order):
+
+```
+<package_id> <discount> <total_cost> <estimated_delivery_time_hours>
+```
+
+Cost calculation is identical to Problem 1. The fleet config line is optional — if omitted, the output format matches Problem 1.
+
+### Vehicle Loading Algorithm
+
+At each dispatch, the available vehicle is loaded with the best subset of undelivered packages:
+
+1. **Maximize package count** — fit as many packages as possible within the weight limit
+2. **Maximize total weight** — on a count tie, prefer the heavier combination
+3. **Minimize distance of heaviest package** — on a count + weight tie, prefer the subset whose heaviest package has the shortest distance
+
+When multiple vehicles become available at the same time, all are dispatched simultaneously — each picks from whatever packages remain after the others have loaded.
+
+### Time Calculation
+
+```
+Delivery time  = dispatch_time + (package_distance / speed)
+Vehicle return = dispatch_time + 2 × (max_distance_in_shipment / speed)
+```
+
+Both the per-leg duration and the final delivery time are **truncated** (not rounded) to 2 decimal places. The vehicle's return time uses `2 × truncate(leg)` — the leg is truncated before doubling.
+
+### Assumptions
+
+All assumptions from Problem 1 apply. Additional assumptions:
+
+- **Truncation, not rounding.** `3.456 → 3.45`. Implemented as `Math.floor(value * 100) / 100`.
+- **Vehicle return time truncates the leg before doubling.** `return = dispatch + 2 × truncate(maxDist / speed)`. This matches the spec walkthrough (e.g. `2 × 1.42 = 2.84`, not `truncate(2.857) = 2.85`).
+- **Subset selection is exhaustive (bitmask enumeration).** All 2ⁿ subsets are evaluated. Suitable for small inputs; a knapsack DP approach would be needed for scale.
+- **Output order matches input order**, regardless of delivery sequence.
+- **The fleet config line is required for time estimation.** Without it, the program behaves identically to Problem 1.
+
+### Run
+
+```bash
+echo "100 5
+PKG1 50 30 OFR001
+PKG2 75 125 OFR008
+PKG3 175 100 OFR003
+PKG4 110 60 OFR002
+PKG5 155 95 NA
+2 70 200" | npm run start:problem2
+```
+
+Or interactively — type your input and press **Enter on a blank line** or type **`END`** to trigger calculation:
+
+```bash
+npm run start:problem2
+100 5
+PKG1 50 30 OFR001
+PKG2 75 125 OFR008
+PKG3 175 100 OFR003
+PKG4 110 60 OFR002
+PKG5 155 95 NA
+2 70 200
+END
+```
+
+Expected output:
+
+```
+PKG1 0 750 3.98
+PKG2 0 1475 1.78
+PKG3 0 2350 1.42
+PKG4 105 1395 0.85
+PKG5 0 2125 4.19
+```
+
+### Test
+
+```bash
+# Problem 2 only
+npm run test:problem2
+
+# All problems
+npm test
+```
