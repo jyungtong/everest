@@ -1,22 +1,27 @@
 import type { FleetConfig, Package } from "./types";
 
+// TODO:
+// - refactor validation
+// - refactor each parsing steps
+
 export function parseInput(lines: string[]): {
 	baseCost: number;
 	packages: Package[];
 	fleetConfig?: FleetConfig;
 } {
-	const nonEmpty = lines.map((l) => l.trim()).filter((l) => l.length > 0);
+	const nonEmptyLines = lines.map((l) => l.trim()).filter((l) => l.length > 0);
 
-	if (nonEmpty.length < 1) {
+	if (nonEmptyLines.length < 1) {
 		throw new Error("Input must contain at least a header line.");
 	}
 
-	const [rawBase, rawCount] = nonEmpty[0].split(/\s+/);
-	const baseCost = parseInt(rawBase, 10);
-	const numPackages = parseInt(rawCount, 10);
+  const firstLine = nonEmptyLines[0];
+	const [rawBaseCost, rawPackagesCount] = firstLine.split(/\s+/);
+	const baseCost = parseInt(rawBaseCost, 10);
+  const numPackages = parseInt(rawPackagesCount, 10);
 
 	if (Number.isNaN(baseCost) || Number.isNaN(numPackages)) {
-		throw new Error(`Invalid header line: "${nonEmpty[0]}"`);
+		throw new Error(`Invalid header line: "${nonEmptyLines[0]}"`);
 	}
 
 	if (baseCost < 0)
@@ -26,8 +31,9 @@ export function parseInput(lines: string[]): {
 
 	const packages: Package[] = [];
 
-	for (let i = 1; i <= numPackages; i++) {
-		const line = nonEmpty[i];
+  const PACKAGE_LINE_NUMBER_START = 1;
+	for (let i = PACKAGE_LINE_NUMBER_START; i <= numPackages; i++) {
+		const line = nonEmptyLines[i];
 		if (!line) {
 			throw new Error(
 				`Expected ${numPackages} packages but only found ${i - 1}.`,
@@ -52,13 +58,13 @@ export function parseInput(lines: string[]): {
 		packages.push({ id, weight, distance, offerCode });
 	}
 
-	const fleetLine = nonEmpty[numPackages + 1];
+	const fleetLine = nonEmptyLines[numPackages + 1];
 	if (!fleetLine) {
 		return { baseCost, packages };
 	}
 
-	const [rawVehicles, rawSpeed, rawMaxWeight] = fleetLine.split(/\s+/);
-	const numVehicles = parseInt(rawVehicles, 10);
+	const [rawVehiclesCount, rawSpeed, rawMaxWeight] = fleetLine.split(/\s+/);
+	const numVehicles = parseInt(rawVehiclesCount, 10);
 	const maxSpeed = parseFloat(rawSpeed);
 	const maxWeight = parseFloat(rawMaxWeight);
 
