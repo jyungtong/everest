@@ -54,6 +54,16 @@ describe("selectBestSubset", () => {
 		expect(result).toHaveLength(1);
 		expect(result[0].id).toBe("B");
 	});
+
+	it("prefers shorter distance when two packages have equal weight and only one fits", () => {
+		// A+B = 200 = limit exactly, but A+B together would be fine;
+		// use limit 150 so only one fits: A=100kg dist=30, B=100kg dist=80
+		// Same weight → pick A (shorter distance, delivered sooner)
+		const packages = [pkg("A", 100, 30), pkg("B", 100, 80)];
+		const result = selectBestSubset(packages, 150);
+		expect(result).toHaveLength(1);
+		expect(result[0].id).toBe("A");
+	});
 });
 
 describe("scheduleDeliveries — example from spec", () => {
@@ -107,6 +117,50 @@ describe("scheduleDeliveries — single vehicle", () => {
 		const times = scheduleDeliveries(packages, fleet);
 		expect(times.get("PKG1")).toBe(2.0);
 		expect(times.get("PKG2")).toBe(5.0);
+	});
+});
+
+describe("scheduleDeliveries — equal weight tiebreak by distance", () => {
+	it("ships shorter-distance package first when equal-weight packages compete for one slot", () => {
+		// 3 packages, vehicle capacity 150kg — only one fits per trip
+		// PKG1: 100kg dist=30, PKG2: 100kg dist=80, PKG3: 100kg dist=50
+		// Trip 1: all tie on weight → pick PKG1 (shortest dist=30). Delivered at 0+30/50=0.60. Returns at 2*30/50=1.20
+		// Trip 2: PKG2 vs PKG3 tie on weight → pick PKG3 (shorter dist=50). Delivered at 1.20+50/50=2.20. Returns at 1.20+2*50/50=3.20
+		// Trip 3: PKG2. Delivered at 3.20+80/50=4.80
+		const packages = [
+			pkg("PKG1", 100, 30),
+			pkg("PKG2", 100, 80),
+			pkg("PKG3", 100, 50),
+		];
+		const fleet: FleetConfig = { numVehicles: 1, maxSpeed: 50, maxWeight: 150 };
+		const times = scheduleDeliveries(packages, fleet);
+		expect(times.get("PKG1")).toBe(0.6);
+		expect(times.get("PKG2")).toBe(4.8);
+		expect(times.get("PKG3")).toBe(2.2);
+	});
+
+	it("2 vehicles, 5 packages: equal-weight pair resolved by shorter distance", () => {
+		// PKG1 and PKG2 share the same weight (120kg) but differ in distance (30 vs 70).
+		// PKG1+PKG3 and PKG2+PKG3 are the only 2-package subsets that hit the 200kg limit.
+		// Tiebreak selects PKG1+PKG3 because PKG1's distance (30) < PKG2's distance (70).
+		//
+		// t=0, Vehicle 0: PKG1(120,30)+PKG3(80,50) → PKG1=0+30/50=0.60, PKG3=0+50/50=1.00; returns 2*1.00=2.00
+		// t=0, Vehicle 1: PKG2(120,70)+PKG4(60,40) → PKG4=0+40/50=0.80, PKG2=0+70/50=1.40; returns 2*1.40=2.80
+		// t=2.0, Vehicle 0: PKG5(150,80) → 2.00+80/50=3.60
+		const packages = [
+			pkg("PKG1", 120, 30),
+			pkg("PKG2", 120, 70),
+			pkg("PKG3", 80, 50),
+			pkg("PKG4", 60, 40),
+			pkg("PKG5", 150, 80),
+		];
+		const fleet: FleetConfig = { numVehicles: 2, maxSpeed: 50, maxWeight: 200 };
+		const times = scheduleDeliveries(packages, fleet);
+		expect(times.get("PKG1")).toBe(0.6); // equal-weight, shorter distance → first trip
+		expect(times.get("PKG2")).toBe(1.4); // equal-weight, longer distance → second trip
+		expect(times.get("PKG3")).toBe(1.0);
+		expect(times.get("PKG4")).toBe(0.8);
+		expect(times.get("PKG5")).toBe(3.6);
 	});
 });
 

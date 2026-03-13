@@ -16,27 +16,19 @@ export function selectBestSubset(
 	packages: Package[],
 	maxWeight: number,
 ): Package[] {
-	const n = packages.length;
+	let subsets: Package[][] = [[]];
+	for (const pkg of packages) {
+		subsets = [...subsets, ...subsets.map((s) => [...s, pkg])];
+	}
+
 	let best: Package[] = [];
-
-	for (let mask = 1; mask < 1 << n; mask++) {
-		const subset: Package[] = [];
-		let totalWeight = 0;
-
-		for (let i = 0; i < n; i++) {
-			if (mask & (1 << i)) {
-				subset.push(packages[i]);
-				totalWeight += packages[i].weight;
-			}
-		}
-
-		if (totalWeight > maxWeight) continue;
-
-		if (isBetter(subset, best)) {
+	for (const subset of subsets) {
+		if (subset.length === 0) continue;
+		const weight = subset.reduce((sum, p) => sum + p.weight, 0);
+		if (weight <= maxWeight && isBetter(subset, best)) {
 			best = subset;
 		}
 	}
-
 	return best;
 }
 
@@ -84,7 +76,7 @@ export function scheduleDeliveries(
 		// Dispatch all vehicles available at minTime
 		const availableIndices = vehicleAvailability
 			.map((t, i) => ({ t, i }))
-			.filter(({ t }) => Math.abs(t - minTime) < 1e-9);
+			.filter(({ t }) => t === minTime);
 
 		for (const { i } of availableIndices) {
 			if (undelivered.length === 0) break;
