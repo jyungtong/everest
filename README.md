@@ -63,6 +63,7 @@ A discount is applied only when **both** weight and distance are within the offe
 - **Input is space-delimited.** Each line is split on whitespace; extra spaces are ignored. The offer code field is optional and defaults to no discount if omitted.
 - **`num_packages` in the input is informational.** The app processes all package lines provided; it does not validate that the count matches.
 - **Weight and distance must be positive (> 0).** Zero or negative values are rejected at input parsing with an error. Base cost must be non-negative (≥ 0).
+- **All numeric inputs (base cost, weight, distance) are assumed to be integers.** Decimal values are accepted by the parser but silently truncated via `parseInt` (e.g. `2.5 kg` is treated as `2 kg`). Explicit decimal support is tracked as a future enhancement.
 
 ### Run
 
@@ -101,6 +102,19 @@ npm run test:problem1
 # All problems
 npm test
 ```
+
+### Future Enhancements
+
+- **Support decimal weights and distances** — `parseInt` silently truncates decimal input (e.g. `2.5 kg` becomes `2`). Switch to `parseFloat` with explicit validation.
+- **Runtime-configurable cost rates** — `weightCostPerKg` and `distanceCostPerKm` are hardcoded in `config.ts`. Support environment variables or a config file so rates can change without modifying source.
+- **Dynamic offer code management** — Offer codes are compile-time constants. Support loading offers from an external config to enable runtime addition, modification, or removal.
+- **Fix OFR001 distance boundary for non-integer distances** — The `max: 199` workaround fails for inputs like `199.5 km`. Use a strict less-than comparator for that boundary instead of storing `199`.
+- **Validate `num_packages` against actual input count** — The declared count silently truncates extra package lines. Emit a warning or error on mismatch.
+- **Enforce package ID uniqueness** — Duplicate IDs in input produce ambiguous output with no warning.
+- **Structured output formats** — Add optional JSON or CSV output modes for programmatic consumption downstream.
+- **Streaming input processing** — The entire stdin is buffered before processing begins. Switch to a line-by-line streaming approach for large inputs.
+- **End-to-end integration tests** — Only unit tests exist; no test covers the full stdin → stdout pipeline. A regression in `index.ts` orchestration would not be caught.
+- **Extract shared code into a common library** — `config.ts`, `priceCalculator.ts`, and parts of `inputParser.ts` are duplicated across problems. Consolidate into a shared package so fixes only need to be applied once.
 
 ---
 
@@ -202,3 +216,15 @@ npm run test:problem2
 # All problems
 npm test
 ```
+
+### Future Enhancements
+
+All enhancements listed for Problem 1 apply here as well. Additional enhancements specific to Problem 2:
+
+- **Replace exhaustive subset enumeration with a knapsack DP algorithm** — `generateSubsets` runs in `O(2^n)` time and memory, becoming unusable at ~25 packages. A dynamic programming approach would handle large inputs efficiently.
+- **Globally optimal dispatch scheduling** — The greedy local-best subset selection does not minimize total or average delivery time across all packages. A branch-and-bound or DP approach over vehicle states would yield globally optimal results.
+- **Fair multi-vehicle dispatch** — When multiple vehicles share the earliest availability time, the first vehicle by array index always gets first pick. Implement a fairness or optimality criterion for simultaneous dispatch instead.
+- **Warn when fleet config is absent** — If the fleet config line is missing, time estimation is silently skipped with no user-facing message.
+- **Include vehicle traceability in output** — The output shows delivery times but not which vehicle was used, making dispatch decisions unauditable without modifying the source.
+- **Output sorted by estimated delivery time** — Results follow input order; add an option to sort by delivery time so the earliest-arriving package appears first.
+- **Diagnostic/verbose mode** — No `--verbose` flag exists. Add one to surface internal dispatch decisions (subset chosen, vehicle assigned, offer applied) for debugging and observability.
