@@ -1,43 +1,52 @@
 import type { Package } from "./types";
 
-export function parseInput(lines: string[]): {
-	baseCost: number;
-	packages: Package[];
-} {
-	const nonEmpty = lines.map((l) => l.trim()).filter((l) => l.length > 0);
-
-	if (nonEmpty.length < 1) {
-		throw new Error("Input must contain at least a header line.");
+function validatePositive(value: number, label: string): void {
+	if (value <= 0) {
+		throw new Error(`${label} must be positive, got ${value}.`);
 	}
+}
 
-	const [rawBase, rawCount] = nonEmpty[0].split(/\s+/);
-	const baseCost = parseInt(rawBase, 10);
-	const numPackages = parseInt(rawCount, 10);
+function parseBaseConfig(line: string): {
+	baseCost: number;
+	numPackages: number;
+} {
+	const [rawBaseCost, rawNumPackages] = line.split(/\s+/);
+
+	// baseCost and numPackages are integers by domain definition
+	const baseCost = parseInt(rawBaseCost, 10);
+	const numPackages = parseInt(rawNumPackages, 10);
 
 	if (Number.isNaN(baseCost) || Number.isNaN(numPackages)) {
-		throw new Error(`Invalid header line: "${nonEmpty[0]}"`);
+		throw new Error(`Invalid header line: "${line}"`);
 	}
 
-	if (baseCost < 0)
+	if (baseCost < 0) {
 		throw new Error(`Base cost must be non-negative, got ${baseCost}.`);
-	if (numPackages <= 0)
-		throw new Error(`Package count must be positive, got ${numPackages}.`);
+	}
+	validatePositive(numPackages, "Package count");
 
+	return { baseCost, numPackages };
+}
+
+function parsePackages(
+	lines: string[],
+	start: number,
+	count: number,
+): Package[] {
 	const packages: Package[] = [];
 
-	for (let i = 1; i <= numPackages; i++) {
-		const line = nonEmpty[i];
+	for (let i = start; i < start + count; i++) {
+		const line = lines[i];
 		if (!line) {
 			throw new Error(
-				`Expected ${numPackages} packages but only found ${i - 1}.`,
+				`Expected ${count} packages but only found ${i - start}.`,
 			);
 		}
 
-		const parts = line.split(/\s+/);
-		const [id, rawWeight, rawDistance, offerCode = ""] = parts;
+		const [id, rawWeight, rawDistance, offerCode = ""] = line.split(/\s+/);
 
-		const weight = parseFloat(rawWeight);
-		const distance = parseFloat(rawDistance);
+		const weight = parseInt(rawWeight, 10);
+		const distance = parseInt(rawDistance, 10);
 
 		if (!id || Number.isNaN(weight) || Number.isNaN(distance)) {
 			throw new Error(`Invalid package line: "${line}"`);
@@ -50,6 +59,22 @@ export function parseInput(lines: string[]): {
 
 		packages.push({ id, weight, distance, offerCode });
 	}
+
+	return packages;
+}
+
+export function parseInput(lines: string[]): {
+	baseCost: number;
+	packages: Package[];
+} {
+	const nonEmptyLines = lines.map((l) => l.trim()).filter((l) => l.length > 0);
+
+	if (nonEmptyLines.length < 1) {
+		throw new Error("Input must contain at least a header line.");
+	}
+
+	const { baseCost, numPackages } = parseBaseConfig(nonEmptyLines[0]);
+	const packages = parsePackages(nonEmptyLines, 1, numPackages);
 
 	return { baseCost, packages };
 }
