@@ -153,6 +153,7 @@ describe("scheduleDeliveries — equal weight tiebreak by distance", () => {
 			pkg("PKG3", 80, 50),
 			pkg("PKG4", 60, 40),
 			pkg("PKG5", 150, 80),
+			pkg("PKG6", 150, 80),
 		];
 		const fleet: FleetConfig = { numVehicles: 2, maxSpeed: 50, maxWeight: 200 };
 		const times = scheduleDeliveries(packages, fleet);
@@ -161,6 +162,7 @@ describe("scheduleDeliveries — equal weight tiebreak by distance", () => {
 		expect(times.get("PKG3")).toBe(1.0);
 		expect(times.get("PKG4")).toBe(0.8);
 		expect(times.get("PKG5")).toBe(3.6);
+		expect(times.get("PKG6")).toBe(4.4);
 	});
 });
 

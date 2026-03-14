@@ -152,7 +152,7 @@ All assumptions from Problem 1 apply. Additional assumptions:
 
 - **Truncation, not rounding.** `3.456 → 3.45`. Implemented as `Math.floor(value * 100) / 100`.
 - **Vehicle return time truncates the leg before doubling.** `return = dispatch + 2 × truncate(maxDist / speed)`. This matches the spec walkthrough (e.g. `2 × 1.42 = 2.84`, not `truncate(2.857) = 2.85`).
-- **Subset selection is exhaustive (bitmask enumeration).** All 2ⁿ subsets are evaluated. Suitable for small inputs; a knapsack DP approach would be needed for scale.
+- **Subset selection is exhaustive (bitmask enumeration).** All 2ⁿ subsets are evaluated. Suitable for small inputs; a knapsack DP approach would be needed for scale. // TODO: udpate
 - **Output order matches input order**, regardless of delivery sequence.
 - **The fleet config line is required for time estimation.** Without it, the program behaves identically to Problem 1.
 

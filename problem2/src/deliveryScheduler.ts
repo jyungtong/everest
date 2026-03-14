@@ -1,6 +1,6 @@
 import type { FleetConfig, Package } from "./types";
 
-function truncate2(value: number): number {
+function truncate2decimals(value: number): number {
 	return Math.floor(value * 100) / 100;
 }
 
@@ -25,10 +25,13 @@ export function selectBestSubset(
 	for (const subset of subsets) {
 		if (subset.length === 0) continue;
 		const weight = subset.reduce((sum, p) => sum + p.weight, 0);
-		if (weight <= maxWeight && isBetter(subset, best)) {
+		const fits = weight <= maxWeight;
+		const better = fits && isBetter(subset, best);
+		if (better) {
 			best = subset;
 		}
 	}
+
 	return best;
 }
 
@@ -70,7 +73,9 @@ export function scheduleDeliveries(
 	const undelivered = [...packages];
 	const vehicleAvailability = Array<number>(fleet.numVehicles).fill(0);
 
+	let round = 0;
 	while (undelivered.length > 0) {
+		round++;
 		const minTime = Math.min(...vehicleAvailability);
 
 		// Dispatch all vehicles available at minTime
@@ -88,16 +93,14 @@ export function scheduleDeliveries(
 			const maxDist = Math.max(...subset.map((p) => p.distance));
 
 			for (const pkg of subset) {
-				deliveryTimes.set(
-					pkg.id,
-					truncate2(dispatchTime + pkg.distance / fleet.maxSpeed),
-				);
+				const eta = truncate2decimals(dispatchTime + pkg.distance / fleet.maxSpeed);
+				deliveryTimes.set(pkg.id, eta);
 				undelivered.splice(undelivered.indexOf(pkg), 1);
 			}
 
-			// Vehicle return time uses truncate2 on the leg before doubling (matches spec walkthrough)
-			vehicleAvailability[i] =
-				dispatchTime + 2 * truncate2(maxDist / fleet.maxSpeed);
+			// Vehicle return time uses truncate2decimals on the leg before doubling (matches spec walkthrough)
+			const returnTime = dispatchTime + 2 * truncate2decimals(maxDist / fleet.maxSpeed);
+			vehicleAvailability[i] = returnTime;
 		}
 	}
 
