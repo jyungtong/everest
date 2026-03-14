@@ -228,3 +228,13 @@ All enhancements listed for Problem 1 apply here as well. Additional enhancement
 - **Include vehicle traceability in output** — The output shows delivery times but not which vehicle was used, making dispatch decisions unauditable without modifying the source.
 - **Output sorted by estimated delivery time** — Results follow input order; add an option to sort by delivery time so the earliest-arriving package appears first.
 - **Diagnostic/verbose mode** — No `--verbose` flag exists. Add one to surface internal dispatch decisions (subset chosen, vehicle assigned, offer applied) for debugging and observability.
+
+---
+
+## AI Tools Disclosure
+
+The following AI-based tools were used during development of this assignment:
+
+| Tool | Nature of Assistance |
+|------|----------------------|
+| Claude (Anthropic) | Logic guidance, debugging, documentation, and code generation |
