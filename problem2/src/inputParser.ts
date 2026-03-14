@@ -101,5 +101,14 @@ export function parseInput(lines: string[]): ParsedInput {
 	}
 
 	const fleetConfig = parseFleetConfig(fleetLine);
+
+	for (const pkg of packages) {
+		if (pkg.weight > fleetConfig.maxWeight) {
+			throw new Error(
+				`Package ${pkg.id} weight (${pkg.weight} kg) exceeds vehicle max weight (${fleetConfig.maxWeight} kg).`,
+			);
+		}
+	}
+
 	return { baseCost, packages, fleetConfig };
 }

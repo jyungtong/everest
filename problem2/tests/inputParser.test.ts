@@ -196,4 +196,34 @@ describe("parseInput — fleet config", () => {
 			"Max carriable weight must be positive, got 0.",
 		);
 	});
+
+	it("throws when a package weight exceeds maxWeight", () => {
+		// PKG1: 250kg > fleet maxWeight of 200kg
+		expect(() =>
+			parseInput(["100 1", "PKG1 250 50 OFR001", "2 70 200"]),
+		).toThrow(
+			"Package PKG1 weight (250 kg) exceeds vehicle max weight (200 kg).",
+		);
+	});
+
+	it("throws on the first offending package and stops (fail-fast)", () => {
+		// PKG1 fits (100kg ≤ 200kg); PKG2 does not (300kg > 200kg) — error names PKG2
+		expect(() =>
+			parseInput(["100 2", "PKG1 100 50", "PKG2 300 30", "2 70 200"]),
+		).toThrow(
+			"Package PKG2 weight (300 kg) exceeds vehicle max weight (200 kg).",
+		);
+	});
+
+	it("does not throw when package weight equals maxWeight exactly", () => {
+		// weight === maxWeight is valid
+		expect(() =>
+			parseInput(["100 1", "PKG1 200 50", "2 70 200"]),
+		).not.toThrow();
+	});
+
+	it("does not perform the over-limit check when fleet config is absent", () => {
+		// Without a fleet line there is no maxWeight to compare against — must not throw
+		expect(() => parseInput(["100 1", "PKG1 9999 50"])).not.toThrow();
+	});
 });
