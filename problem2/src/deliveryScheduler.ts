@@ -110,6 +110,44 @@ function vehicleReturnTime(
 	return dispatchTime + 2 * truncate2decimals(maxDist / maxSpeed);
 }
 
+function maxDistance(packages: Package[]): number {
+	return Math.max(...packages.map((p) => p.distance));
+}
+
+// --- Vehicle availability helpers ---
+
+function earliestAvailableTime(vehicleAvailability: number[]): number {
+	return Math.min(...vehicleAvailability);
+}
+
+function availableVehicleIndices(
+	vehicleAvailability: number[],
+	time: number,
+): number[] {
+	return vehicleAvailability
+		.map((t, i) => ({ t, i }))
+		.filter(({ t }) => t === time)
+		.map(({ i }) => i);
+}
+
+function dispatchSubset(
+	subset: Package[],
+	dispatchTime: number,
+	fleet: FleetConfig,
+	deliveryTimes: Map<string, number>,
+	undelivered: Package[],
+): number {
+	const farthest = maxDistance(subset);
+	for (const pkg of subset) {
+		deliveryTimes.set(
+			pkg.id,
+			deliveryEta(dispatchTime, pkg.distance, fleet.maxSpeed),
+		);
+		undelivered.splice(undelivered.indexOf(pkg), 1);
+	}
+	return vehicleReturnTime(dispatchTime, farthest, fleet.maxSpeed);
+}
+
 /**
  * Schedules deliveries for all packages given a fleet config.
  * Returns a map of package id → estimated delivery time (truncated to 2 decimal places).
@@ -123,32 +161,22 @@ export function scheduleDeliveries(
 	const vehicleAvailability = Array<number>(fleet.numVehicles).fill(0);
 
 	while (undelivered.length > 0) {
-		const minTime = Math.min(...vehicleAvailability);
+		const dispatchTime = earliestAvailableTime(vehicleAvailability);
+		const vehicleIndices = availableVehicleIndices(
+			vehicleAvailability,
+			dispatchTime,
+		);
 
-		const availableIndices = vehicleAvailability
-			.map((t, i) => ({ t, i }))
-			.filter(({ t }) => t === minTime);
-
-		for (const { i } of availableIndices) {
+		for (const i of vehicleIndices) {
 			if (undelivered.length === 0) break;
-
 			const subset = selectBestSubset(undelivered, fleet.maxWeight);
 			if (subset.length === 0) break;
-
-			const maxDist = Math.max(...subset.map((p) => p.distance));
-
-			for (const pkg of subset) {
-				deliveryTimes.set(
-					pkg.id,
-					deliveryEta(minTime, pkg.distance, fleet.maxSpeed),
-				);
-				undelivered.splice(undelivered.indexOf(pkg), 1);
-			}
-
-			vehicleAvailability[i] = vehicleReturnTime(
-				minTime,
-				maxDist,
-				fleet.maxSpeed,
+			vehicleAvailability[i] = dispatchSubset(
+				subset,
+				dispatchTime,
+				fleet,
+				deliveryTimes,
+				undelivered,
 			);
 		}
 	}
