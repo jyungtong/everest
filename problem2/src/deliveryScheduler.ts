@@ -19,16 +19,27 @@ export function selectBestSubset(
 	let subsets: Package[][] = [[]];
 	for (const pkg of packages) {
 		subsets = [...subsets, ...subsets.map((s) => [...s, pkg])];
+    console.log('=====',subsets)
 	}
+
+	// console.log(`[selectBestSubset] maxWeight=${maxWeight}, candidates=${subsets.length - 1} (excluding empty)`);
 
 	let best: Package[] = [];
 	for (const subset of subsets) {
 		if (subset.length === 0) continue;
 		const weight = subset.reduce((sum, p) => sum + p.weight, 0);
-		if (weight <= maxWeight && isBetter(subset, best)) {
+		const fits = weight <= maxWeight;
+		const better = fits && isBetter(subset, best);
+		// console.log(
+		// 	`  subset=[${subset.map((p) => p.id).join(",")}] weight=${weight} fits=${fits} better=${better}`,
+		// );
+		if (better) {
 			best = subset;
+			// console.log(`  → new best: [${best.map((p) => p.id).join(",")}]`);
 		}
 	}
+
+	// console.log(`[selectBestSubset] result: [${best.map((p) => p.id).join(",")}]`);
 	return best;
 }
 
@@ -70,13 +81,22 @@ export function scheduleDeliveries(
 	const undelivered = [...packages];
 	const vehicleAvailability = Array<number>(fleet.numVehicles).fill(0);
 
+	console.log(`[scheduleDeliveries] Starting: ${packages.length} packages, ${fleet.numVehicles} vehicles, maxWeight=${fleet.maxWeight}, maxSpeed=${fleet.maxSpeed}`);
+
+	let round = 0;
 	while (undelivered.length > 0) {
+		round++;
 		const minTime = Math.min(...vehicleAvailability);
+
+		console.log(`\n[Round ${round}] t=${minTime} | undelivered: [${undelivered.map((p) => p.id).join(", ")}]`);
+		console.log(`  vehicleAvailability: [${vehicleAvailability.join(", ")}]`);
 
 		// Dispatch all vehicles available at minTime
 		const availableIndices = vehicleAvailability
 			.map((t, i) => ({ t, i }))
 			.filter(({ t }) => t === minTime);
+
+		console.log(`  available vehicles: [${availableIndices.map(({ i }) => i).join(", ")}]`);
 
 		for (const { i } of availableIndices) {
 			if (undelivered.length === 0) break;
@@ -87,19 +107,22 @@ export function scheduleDeliveries(
 			const dispatchTime = minTime;
 			const maxDist = Math.max(...subset.map((p) => p.distance));
 
+			console.log(`  vehicle[${i}] dispatched at t=${dispatchTime} with: [${subset.map((p) => `${p.id}(w=${p.weight},d=${p.distance})`).join(", ")}]`);
+
 			for (const pkg of subset) {
-				deliveryTimes.set(
-					pkg.id,
-					truncate2(dispatchTime + pkg.distance / fleet.maxSpeed),
-				);
+				const eta = truncate2(dispatchTime + pkg.distance / fleet.maxSpeed);
+				deliveryTimes.set(pkg.id, eta);
+				console.log(`    → ${pkg.id} delivered at t=${eta}`);
 				undelivered.splice(undelivered.indexOf(pkg), 1);
 			}
 
 			// Vehicle return time uses truncate2 on the leg before doubling (matches spec walkthrough)
-			vehicleAvailability[i] =
-				dispatchTime + 2 * truncate2(maxDist / fleet.maxSpeed);
+			const returnTime = dispatchTime + 2 * truncate2(maxDist / fleet.maxSpeed);
+			console.log(`  vehicle[${i}] returns at t=${returnTime} (maxDist=${maxDist})`);
+			vehicleAvailability[i] = returnTime;
 		}
 	}
 
+	console.log(`\n[scheduleDeliveries] Done. Delivery times:`, Object.fromEntries(deliveryTimes));
 	return deliveryTimes;
 }
