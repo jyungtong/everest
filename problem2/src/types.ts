@@ -33,3 +33,9 @@ export interface FleetConfig {
 	maxSpeed: number; // km/h
 	maxWeight: number; // kg
 }
+
+export interface ParsedInput {
+	baseCost: number;
+	packages: Package[];
+	fleetConfig?: FleetConfig;
+}

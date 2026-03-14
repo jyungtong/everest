@@ -1,50 +1,52 @@
-import type { FleetConfig, Package } from "./types";
+import type { FleetConfig, Package, ParsedInput } from "./types";
 
-// TODO:
-// - refactor validation
-// - refactor each parsing steps
-
-export function parseInput(lines: string[]): {
-	baseCost: number;
-	packages: Package[];
-	fleetConfig?: FleetConfig;
-} {
-	const nonEmptyLines = lines.map((l) => l.trim()).filter((l) => l.length > 0);
-
-	if (nonEmptyLines.length < 1) {
-		throw new Error("Input must contain at least a header line.");
+function validatePositive(value: number, label: string): void {
+	if (value <= 0) {
+		throw new Error(`${label} must be positive, got ${value}.`);
 	}
+}
 
-  const firstLine = nonEmptyLines[0];
-	const [rawBaseCost, rawPackagesCount] = firstLine.split(/\s+/);
+function parseBaseConfig(line: string): {
+	baseCost: number;
+	numPackages: number;
+} {
+	const [rawBaseCost, rawNumPackages] = line.split(/\s+/);
+
+	// baseCost and numPackages are integers by domain definition
 	const baseCost = parseInt(rawBaseCost, 10);
-  const numPackages = parseInt(rawPackagesCount, 10);
+	const numPackages = parseInt(rawNumPackages, 10);
 
 	if (Number.isNaN(baseCost) || Number.isNaN(numPackages)) {
-		throw new Error(`Invalid header line: "${nonEmptyLines[0]}"`);
+		throw new Error(`Invalid header line: "${line}"`);
 	}
 
-	if (baseCost < 0)
+	if (baseCost < 0) {
 		throw new Error(`Base cost must be non-negative, got ${baseCost}.`);
-	if (numPackages <= 0)
-		throw new Error(`Package count must be positive, got ${numPackages}.`);
+	}
+	validatePositive(numPackages, "Package count");
 
+	return { baseCost, numPackages };
+}
+
+function parsePackages(
+	lines: string[],
+	start: number,
+	count: number,
+): Package[] {
 	const packages: Package[] = [];
 
-  const PACKAGE_LINE_NUMBER_START = 1;
-	for (let i = PACKAGE_LINE_NUMBER_START; i <= numPackages; i++) {
-		const line = nonEmptyLines[i];
+	for (let i = start; i < start + count; i++) {
+		const line = lines[i];
 		if (!line) {
 			throw new Error(
-				`Expected ${numPackages} packages but only found ${i - 1}.`,
+				`Expected ${count} packages but only found ${i - start}.`,
 			);
 		}
 
-		const parts = line.split(/\s+/);
-		const [id, rawWeight, rawDistance, offerCode = ""] = parts;
+		const [id, rawWeight, rawDistance, offerCode = ""] = line.split(/\s+/);
 
-		const weight = parseFloat(rawWeight);
-		const distance = parseFloat(rawDistance);
+		const weight = parseInt(rawWeight, 10);
+		const distance = parseInt(rawDistance, 10);
 
 		if (!id || Number.isNaN(weight) || Number.isNaN(distance)) {
 			throw new Error(`Invalid package line: "${line}"`);
@@ -58,34 +60,46 @@ export function parseInput(lines: string[]): {
 		packages.push({ id, weight, distance, offerCode });
 	}
 
-	const fleetLine = nonEmptyLines[numPackages + 1];
-	if (!fleetLine) {
-		return { baseCost, packages };
-	}
+	return packages;
+}
 
-	const [rawVehiclesCount, rawSpeed, rawMaxWeight] = fleetLine.split(/\s+/);
-	const numVehicles = parseInt(rawVehiclesCount, 10);
-	const maxSpeed = parseFloat(rawSpeed);
-	const maxWeight = parseFloat(rawMaxWeight);
+function parseFleetConfig(line: string): FleetConfig {
+	const [rawNumVehicles, rawMaxSpeed, rawMaxWeight] = line.split(/\s+/);
+
+	const numVehicles = parseInt(rawNumVehicles, 10);
+	const maxSpeed = parseInt(rawMaxSpeed, 10);
+	const maxWeight = parseInt(rawMaxWeight, 10);
 
 	if (
 		Number.isNaN(numVehicles) ||
 		Number.isNaN(maxSpeed) ||
 		Number.isNaN(maxWeight)
 	) {
-		throw new Error(`Invalid fleet config line: "${fleetLine}"`);
+		throw new Error(`Invalid fleet config line: "${line}"`);
 	}
 
-	if (numVehicles <= 0)
-		throw new Error(`Number of vehicles must be positive, got ${numVehicles}.`);
-	if (maxSpeed <= 0)
-		throw new Error(`Max speed must be positive, got ${maxSpeed}.`);
-	if (maxWeight <= 0)
-		throw new Error(`Max carriable weight must be positive, got ${maxWeight}.`);
+	validatePositive(numVehicles, "Number of vehicles");
+	validatePositive(maxSpeed, "Max speed");
+	validatePositive(maxWeight, "Max carriable weight");
 
-	return {
-		baseCost,
-		packages,
-		fleetConfig: { numVehicles, maxSpeed, maxWeight },
-	};
+	return { numVehicles, maxSpeed, maxWeight };
+}
+
+export function parseInput(lines: string[]): ParsedInput {
+	const nonEmptyLines = lines.map((l) => l.trim()).filter((l) => l.length > 0);
+
+	if (nonEmptyLines.length < 1) {
+		throw new Error("Input must contain at least a header line.");
+	}
+
+	const { baseCost, numPackages } = parseBaseConfig(nonEmptyLines[0]);
+	const packages = parsePackages(nonEmptyLines, 1, numPackages);
+
+	const fleetLine = nonEmptyLines[numPackages + 1];
+	if (!fleetLine) {
+		return { baseCost, packages };
+	}
+
+	const fleetConfig = parseFleetConfig(fleetLine);
+	return { baseCost, packages, fleetConfig };
 }

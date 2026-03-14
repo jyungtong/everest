@@ -35,11 +35,11 @@ describe("parseInput — valid input", () => {
 		});
 	});
 
-	it("handles decimal weight and distance", () => {
-		const lines = ["100 1", "PKG1 2.5 10.7 OFR001"];
+	it("handles integer weight and distance", () => {
+		const lines = ["100 1", "PKG1 3 11 OFR001"];
 		const { packages } = parseInput(lines);
-		expect(packages[0].weight).toBe(2.5);
-		expect(packages[0].distance).toBe(10.7);
+		expect(packages[0].weight).toBe(3);
+		expect(packages[0].distance).toBe(11);
 	});
 
 	it("ignores empty lines between entries", () => {
