@@ -133,7 +133,7 @@ At each dispatch, the available vehicle is loaded with the best subset of undeli
 
 1. **Maximize package count** — fit as many packages as possible within the weight limit
 2. **Maximize total weight** — on a count tie, prefer the heavier combination
-3. **Minimize distance of heaviest package** — on a count + weight tie, prefer the subset whose heaviest package has the shortest distance
+3. **Minimize distance of heaviest package** — on a count + weight tie, prefer the subset whose heaviest package has the shortest distance (if multiple packages tie for heaviest, the minimum distance among them is used)
 
 When multiple vehicles become available at the same time, all are dispatched simultaneously — each picks from whatever packages remain after the others have loaded.
 
@@ -152,7 +152,8 @@ All assumptions from Problem 1 apply. Additional assumptions:
 
 - **Truncation, not rounding.** `3.456 → 3.45`. Implemented as `Math.floor(value * 100) / 100`.
 - **Vehicle return time truncates the leg before doubling.** `return = dispatch + 2 × truncate(maxDist / speed)`. This matches the spec walkthrough (e.g. `2 × 1.42 = 2.84`, not `truncate(2.857) = 2.85`).
-- **Subset selection is exhaustive (bitmask enumeration).** All 2ⁿ subsets are evaluated. Suitable for small inputs; a knapsack DP approach would be needed for scale. // TODO: udpate
+- **Subset selection is exhaustive.** Every possible combination of packages is evaluated (the number of combinations doubles with each additional package). Suitable for small inputs; a knapsack DP approach would be needed for scale.
+- **Simultaneous vehicle dispatch.** When multiple vehicles share the earliest availability time, all are dispatched in the same scheduling round. Each picks from whatever packages remain after the preceding vehicles (in array-index order) have already loaded their subsets.
 - **Output order matches input order**, regardless of delivery sequence.
 - **The fleet config line is required for time estimation.** Without it, the program behaves identically to Problem 1.
 
