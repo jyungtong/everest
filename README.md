@@ -231,6 +231,46 @@ All enhancements listed for Problem 1 apply here as well. Additional enhancement
 
 ---
 
+## Architecture & Design Philosophy
+
+### Guiding Principle
+
+This codebase is written with Clean Code principles in mind — specifically the idea that code should read like well-written prose. Functions and modules are named to tell a story: `parseInput`, `calculateDeliveryCost`, `scheduleDeliveries`, `formatResult`. You can read `index.ts` from top to bottom and understand the full program flow without opening another file. Complexity is introduced only when the problem genuinely demands it, not speculatively.
+
+### Pipeline Architecture
+
+Each problem follows a simple, linear pipeline with one module per concern:
+
+```
+stdin → inputParser → priceCalculator → [deliveryScheduler] → outputFormatter → stdout
+```
+
+`index.ts` is a thin orchestrator — it wires the pipeline together but contains no business logic of its own. Each stage has one job, one name, and one reason to change. Reading the pipeline tells the full story; the individual modules fill in the details.
+
+### Folder Structure
+
+Each problem's `src/` directory is intentionally flat — 6 files, all at the same level, no subfolders. With every file already named after its single job (`inputParser`, `priceCalculator`, `deliveryScheduler`, `outputFormatter`), adding a folder layer like `services/` or `parsers/` would introduce navigation indirection without carrying any information the filenames don't already provide. You'd be opening `services/priceCalculator.ts` instead of `priceCalculator.ts` — the folder name is redundant.
+
+Introducing structure before the complexity justifies it is its own form of over-engineering — folders imposed in anticipation of growth that may never come, at the cost of immediate readability. The pipeline stages are the logical grouping; the filenames already reflect that.
+
+A subfolder earns its place when a module grows to own multiple files. If `deliveryScheduler` expanded into a separate subset selector, a comparator module, and a DP algorithm, a `scheduler/` directory would then carry real meaning. Until that point, the flat layout keeps everything visible at a glance.
+
+### SOLID Principles Applied
+
+- **Single Responsibility (SRP)** — Each module does exactly one thing: `inputParser` parses, `priceCalculator` calculates, `deliveryScheduler` schedules, `outputFormatter` formats. No module owns more than one concern.
+- **Open/Closed (OCP)** — Offer codes are data entries in a `Record<string, OfferRule>` config map, not branching logic in the calculator. Adding a new offer requires zero code changes — only a new entry in `OFFER_CODES`. The comment in `config.ts` makes this explicit.
+- **Dependency Inversion (DIP)** — `calculateDeliveryCost` and `scheduleDeliveries` receive their configuration (offers, cost rates, fleet config) as explicit parameters rather than importing from module globals. Business logic is decoupled from configuration, which also makes unit tests trivial — each test supplies its own inline config without needing to mock any module.
+
+### Conscious Tradeoffs
+
+`config.ts` and `priceCalculator.ts` are intentionally duplicated between problem1 and problem2 rather than extracted into a shared library. The two problems are deliberately isolated standalone CLIs — coupling them through a shared package would add coordination overhead disproportionate to their scope. The monorepo structure with npm workspaces is already in place to support that extraction cleanly when the tradeoff changes.
+
+### What I'd Change at Scale
+
+The Future Enhancements sections above list the specific inflection points where more abstraction earns its place: replacing the O(2^n) exhaustive subset algorithm with a knapsack DP approach, externalising the hardcoded config, and extracting the shared code into a common library. Each of those is a straightforward next step — held back deliberately because the current scope doesn't justify the added indirection.
+
+---
+
 ## AI Tools Disclosure
 
 The following AI-based tools were used during development of this assignment:
